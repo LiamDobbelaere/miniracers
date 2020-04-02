@@ -2,14 +2,14 @@ AddCSLuaFile()
 
 ENT.PrintName = "Miniracer Test"
 ENT.Author = "Digaly"
-ENT.Information = "Use movement keys to control"
+ENT.Information = "Movement keys = control, E = change camera, R = reset"
 ENT.Category = "Miniracers"
 
 ENT.Type = "anim"
 ENT.Base = "base_anim"
 
 ENT.Editable = true
-ENT.Spawnable = true
+ENT.Spawnable = false
 ENT.AdminOnly = false
 
 function ENT:SpawnFunction(ply, tr, ClassName)
@@ -29,7 +29,7 @@ function ENT:Initialize()
 
     if (CLIENT) then return end
 
-    self:SetModel("models/miniracers/mrcar02.mdl")
+    self:SetModel(self:GetMRModel())
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
@@ -50,6 +50,10 @@ function ENT:Initialize()
     self.cam:SetPos(self:GetPos())
     self.cam:Spawn()
     self.cam:Activate()
+end
+
+function ENT:GetMRModel()
+    return "models/Gibs/HGIBS.mdl"
 end
 
 function ENT:OnRemove()
@@ -78,8 +82,8 @@ function ENT:Think()
     local inputReverse = owner:KeyDown(IN_BACK)
     local inputLeft = owner:KeyDown(IN_MOVELEFT)
     local inputRight = owner:KeyDown(IN_MOVERIGHT)
-    local inputCam = owner:KeyDown(IN_USE)
-    local inputReset = owner:KeyDown(IN_RELOAD	)
+    local inputCam = owner:KeyPressed(IN_USE)
+    local inputReset = owner:KeyPressed(IN_RELOAD)
 
     if inputCam then
         self.cam:NextMode()
@@ -102,22 +106,25 @@ function ENT:Think()
         self.engineSound:ChangeVolume(0, 0.2)
     end
 
-    local accForce = 100
+    local accForce = 1000
     if (inputForward) then
-        phy:ApplyForceCenter(self:GetForward() * accForce)
+        phy:ApplyForceCenter(self:GetForward() * accForce * FrameTime())
     elseif (inputReverse) then
-        phy:ApplyForceCenter(self:GetForward() * accForce * -0.5)
-    elseif (phy:GetVelocity():Length() < 0) then
-        --phy:ApplyForceCenter(self:GetForward() * accForce * -0.5)
+        phy:ApplyForceCenter(self:GetForward() * accForce * -0.5 * FrameTime())
+    else
+        phy:SetVelocity(phy:GetVelocity() * 0.98)
     end
 
 
-    local avForce = 300 --phy:GetVelocity():Length() * 1.5
+    local avForce = 15000 --phy:GetVelocity():Length() * 1.5
     if (inputLeft) then
-        phy:AddAngleVelocity(-phy:GetAngleVelocity() + Vector(0, 0, avForce))
+        phy:AddAngleVelocity(-phy:GetAngleVelocity() + Vector(0, 0, avForce * FrameTime()))
     elseif (inputRight) then
-        phy:AddAngleVelocity(-phy:GetAngleVelocity() + Vector(0, 0, -avForce))
+        phy:AddAngleVelocity(-phy:GetAngleVelocity() + Vector(0, 0, -avForce * FrameTime()))
     else
         phy:AddAngleVelocity(-phy:GetAngleVelocity())
     end
+
+    self:NextThink( CurTime())
+	return true
 end
