@@ -29,7 +29,7 @@ function ENT:Initialize()
 
     if (CLIENT) then return end
 
-    self:SetModel("models/miniracers/mrcar01.mdl")
+    self:SetModel("models/miniracers/mrcar02.mdl")
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
@@ -37,11 +37,13 @@ function ENT:Initialize()
     local phys = self:GetPhysicsObject()
     if (phys:IsValid()) then 
         phys:Wake() 
-        --phys:EnableDrag(false)
+        phys:EnableDrag(false)
         --phys:EnableGravity(false)
-        --phys:SetDamping(0, 0)
-        --phys:SetAngleDragCoefficient(0)
+        phys:SetDamping(0, 0)
+        phys:SetAngleDragCoefficient(0)
     end
+
+    self.thinkOnce = false
 
     self.cam = ents.Create("sent_mrcamera")
     self.cam.target = self;
@@ -54,19 +56,39 @@ function ENT:OnRemove()
     self.engineSound:Stop()
 
     if (CLIENT) then return end
+
+    if IsValid(self.cam) then
+        self.cam:Remove()
+    end
+
     self:GetCreator():SetViewEntity(NULL)
 end
 
 function ENT:Think()
     if (CLIENT) then return end
     
+    if not self.thinkOnce then
+        self.cam.player = self:GetCreator()
+        self.cam:NextMode()
+        self.thinkOnce = true
+    end
+
     local owner = self:GetCreator()
     local inputForward = owner:KeyDown(IN_FORWARD)
     local inputReverse = owner:KeyDown(IN_BACK)
     local inputLeft = owner:KeyDown(IN_MOVELEFT)
     local inputRight = owner:KeyDown(IN_MOVERIGHT)
+    local inputCam = owner:KeyDown(IN_USE)
+    local inputReset = owner:KeyDown(IN_RELOAD	)
 
-    owner:SetViewEntity(self.cam)
+    if inputCam then
+        self.cam:NextMode()
+    end
+    
+    if inputReset then
+        local currentAngles = self:GetAngles()
+        self:SetAngles(Angle(0, currentAngles.y, 0))
+    end
 
     local phy = self:GetPhysicsObject()
 

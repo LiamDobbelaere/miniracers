@@ -4,6 +4,7 @@
 
 // BEGIN Textures
 	$basetexture "miniracers/mrcar01"
+	$bumpmap "miniracers/mrcar01_bump"
 // END Textures
 
 

@@ -38,6 +38,7 @@ function ENT:Initialize()
     self:DrawShadow(false)
 
     self.distance = 100
+    self.mode = 2
 end
 
 function ENT:Think()
@@ -45,7 +46,30 @@ function ENT:Think()
     
     local phys = self:GetPhysicsObject()
     if IsValid(self.target) then
-        phys:SetVelocity(((self.target:GetPos() + Vector(0, 0, self.distance)) - self:GetPos()) * 5)
+        if self.mode == 0 then
+            phys:SetVelocity(((self.target:GetPos() + Vector(0, 0, self.distance)) - self:GetPos()) * 5)
+        end
+    end
+end
+
+function ENT:NextMode()
+    self.mode = self.mode + 1
+
+    if self.mode > 2 then
+        self.mode = 0
+    end
+
+    if self.mode == 0 then
+        self:SetParent(nil)
+        self:SetPos(self.target:GetPos() + Vector(0, 0, self.distance))
         self:SetAngles(Angle(90, 0, 0))
+        self.player:SetViewEntity(self)
+    elseif self.mode == 1 then
+        self:SetPos(self.target:GetPos() + Vector(0, 0, 5))
+        self:SetAngles(self.target:GetAngles())
+        self:SetParent(self.target)
+        self.player:SetViewEntity(self)
+    elseif self.mode == 2 then  
+        self.player:SetViewEntity(nil)
     end
 end
