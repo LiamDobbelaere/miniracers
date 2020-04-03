@@ -63,7 +63,8 @@ function ENT:GetMRStats()
         steer = 15000,
         drift = 1,
         pitchMin = 50,
-        pitchMax = 200
+        pitchBase = 80,
+        pitchVelocityMultiplier = 1
     }
 end
 
@@ -112,7 +113,7 @@ function ENT:Think()
     self.cam.distance = phy:GetVelocity():Length() * 0.5 + 150
     
     if inputForward || inputReverse then
-        self.engineSound:ChangePitch(self.stats.pitchMax, 2)
+        self.engineSound:ChangePitch(self.stats.pitchBase + phy:GetVelocity():Length() * self.stats.pitchVelocityMultiplier, 0.2)
         self.engineSound:ChangeVolume(1, 0.2)
     else
         self.engineSound:ChangePitch(self.stats.pitchMin, 0.5)

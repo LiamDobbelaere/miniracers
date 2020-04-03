@@ -22,6 +22,7 @@ function ENT:GetMRStats()
         steer = 15000,
         drift = 0.1,
         pitchMin = 50,
-        pitchMax = 200
+        pitchBase = 80,
+        pitchVelocityMultiplier = 1
     }
 end
