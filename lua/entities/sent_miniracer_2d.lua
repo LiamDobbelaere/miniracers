@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName = "The G"
+ENT.PrintName = "The G DRIFT"
 ENT.Author = "Digaly"
 ENT.Information = "Movement keys = control, E = change camera, R = reset"
 ENT.Category = "Miniracers"
@@ -18,9 +18,9 @@ end
 
 function ENT:GetMRStats()
     return {
-        acceleration = 1400,
+        acceleration = 1000,
         steer = 15000,
-        drift = 0.1,
+        drift = 1,
         pitchMin = 50,
         pitchMax = 150
     }

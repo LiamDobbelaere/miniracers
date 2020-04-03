@@ -33,13 +33,14 @@ function ENT:Initialize()
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
+    self.stats = self:GetMRStats()
     
     local phys = self:GetPhysicsObject()
     if (phys:IsValid()) then 
         phys:Wake() 
         phys:EnableDrag(false)
         --phys:EnableGravity(false)
-        phys:SetDamping(0, 0)
+        phys:SetDamping(1 - self.stats.drift, 0)
         phys:SetAngleDragCoefficient(0)
     end
 
@@ -50,10 +51,20 @@ function ENT:Initialize()
     self.cam:SetPos(self:GetPos())
     self.cam:Spawn()
     self.cam:Activate()
-end
+end 
 
 function ENT:GetMRModel()
     return "models/Gibs/HGIBS.mdl"
+end
+
+function ENT:GetMRStats()
+    return {
+        acceleration = 1000,
+        steer = 15000,
+        drift = 1,
+        pitchMin = 50,
+        pitchMax = 200
+    }
 end
 
 function ENT:OnRemove()
@@ -71,6 +82,8 @@ end
 function ENT:Think()
     if (CLIENT) then return end
     
+    local forwardNoUp = Vector(self:GetForward().x, 0, self:GetForward().z) 
+
     if not self.thinkOnce then
         self.cam.player = self:GetCreator()
         self.cam:NextMode()
@@ -99,14 +112,20 @@ function ENT:Think()
     self.cam.distance = phy:GetVelocity():Length() * 0.5 + 150
     
     if inputForward || inputReverse then
-        self.engineSound:ChangePitch(200, 2)
+        self.engineSound:ChangePitch(self.stats.pitchMax, 2)
         self.engineSound:ChangeVolume(1, 0.2)
     else
-        self.engineSound:ChangePitch(50, 0.5)
+        self.engineSound:ChangePitch(self.stats.pitchMin, 0.5)
         self.engineSound:ChangeVolume(0, 0.2)
     end
 
-    local accForce = 1000
+    -- Help with going up slopes
+    local slopeAdjust = 0
+    if self:GetAngles().x < 0 then
+        slopeAdjust = self:GetAngles().x * -40
+    end
+
+    local accForce = self.stats.acceleration + slopeAdjust
     if (inputForward) then
         phy:ApplyForceCenter(self:GetForward() * accForce * FrameTime())
     elseif (inputReverse) then
@@ -115,8 +134,7 @@ function ENT:Think()
         phy:SetVelocity(phy:GetVelocity() * 0.98)
     end
 
-
-    local avForce = 15000 --phy:GetVelocity():Length() * 1.5
+    local avForce = self.stats.steer
     if (inputLeft) then
         phy:AddAngleVelocity(-phy:GetAngleVelocity() + Vector(0, 0, avForce * FrameTime()))
     elseif (inputRight) then

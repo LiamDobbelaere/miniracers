@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName = "Miniracer FF 2008"
+ENT.PrintName = "FF 2008"
 ENT.Author = "Digaly"
 ENT.Information = "Movement keys = control, E = change camera, R = reset"
 ENT.Category = "Miniracers"
@@ -14,4 +14,14 @@ ENT.AdminOnly = false
 
 function ENT:GetMRModel()
     return "models/miniracers/mrcar01.mdl"
+end
+
+function ENT:GetMRStats()
+    return {
+        acceleration = 1400,
+        steer = 15000,
+        drift = 0.1,
+        pitchMin = 50,
+        pitchMax = 200
+    }
 end
