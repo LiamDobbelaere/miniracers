@@ -1,6 +1,6 @@
 AddCSLuaFile()
 
-ENT.PrintName = "FF 2008 DRIFT"
+ENT.PrintName = "PD-44 DRIFT"
 ENT.Author = "Digaly"
 ENT.Information = "Movement keys = control, E = change camera, R = reset"
 ENT.Category = "Miniracers"
@@ -13,7 +13,7 @@ ENT.Spawnable = true
 ENT.AdminOnly = false
 
 function ENT:GetMRModel()
-    return "models/miniracers/mrcar01.mdl"
+    return "models/miniracers/mrcar04.mdl"
 end
 
 function ENT:GetMRStats()
