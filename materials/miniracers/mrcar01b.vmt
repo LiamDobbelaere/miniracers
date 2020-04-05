@@ -3,7 +3,7 @@
 // File Created by Wall Worm Pro ( http://dev.wallworm.com )
 
 // BEGIN Textures
-	$basetexture "miniracers/mrcar01"
+	$basetexture "miniracers/mrcar01b"
 	$bumpmap "miniracers/mrcar01_bump"
 // END Textures
 

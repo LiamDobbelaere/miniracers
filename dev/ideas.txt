@@ -1,0 +1,6 @@
+- Fix camera when going inside a building
+- Fix player freezing
+- Add key rebinding
+- Fix car crashing when player leaves the server
+- Car colors through the context menu (NOT edit properties, add new entries!), actually nvm, 
+looks like you can just add skins to the models
