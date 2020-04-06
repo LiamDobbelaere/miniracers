@@ -33,6 +33,8 @@ function ENT:Initialize()
     self:PhysicsInit(SOLID_VPHYSICS)
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
+    self:SetUseType(SIMPLE_USE)
+    
     self.stats = self:GetMRStats()
     
     local phys = self:GetPhysicsObject()
@@ -78,6 +80,12 @@ function ENT:OnRemove()
     end
 
     self:GetCreator():SetViewEntity(NULL)
+end
+
+function ENT:Use(activator)
+    if activator:IsPlayer() && activator == self:GetCreator() then
+        self.cam:NextMode()
+    end
 end
 
 function ENT:Think()

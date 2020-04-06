@@ -39,6 +39,7 @@ function ENT:Initialize()
 
     self.distance = 100
     self.mode = 2
+    self.forceFirstPerson = false
 end
 
 function ENT:Think()
@@ -46,8 +47,25 @@ function ENT:Think()
     
     local phys = self:GetPhysicsObject()
     if IsValid(self.target) then
+        local traceToTarget = util.QuickTrace(self:GetTopDownCamPos(), self.target:GetPos() - self:GetTopDownCamPos(), self)
+        local canSeeTarget = traceToTarget.Entity == self.target
+
+        if not canSeeTarget && self.mode == 0 then
+            self.forceFirstPerson = true
+            self.mode = 1
+            self:InitializeMode()
+        end
+
+        if canSeeTarget && self.forceFirstPerson && self.mode == 1 then
+            self.forceFirstPerson = false
+            self.mode = 0
+            self:InitializeMode()
+        end
+
+        print(canSeeTarget)
+
         if self.mode == 0 then
-            phys:SetVelocity(((self.target:GetPos() + Vector(0, 0, self.distance)) - self:GetPos()) * 5)
+            phys:SetVelocity((self:GetTopDownCamPos() - self:GetPos()) * 5)
         end
     end
 end
@@ -58,10 +76,14 @@ function ENT:NextMode()
     if self.mode > 2 then
         self.mode = 0
     end
+    
+    self:InitializeMode()
+end
 
+function ENT:InitializeMode()
     if self.mode == 0 then
         self:SetParent(nil)
-        self:SetPos(self.target:GetPos() + Vector(0, 0, self.distance))
+        self:SetPos(self:GetTopDownCamPos())
         self:SetAngles(Angle(90, 0, 0))
         self.player:SetViewEntity(self)
     elseif self.mode == 1 then
@@ -72,4 +94,8 @@ function ENT:NextMode()
     elseif self.mode == 2 then  
         self.player:SetViewEntity(nil)
     end
+end
+
+function ENT:GetTopDownCamPos()
+    return self.target:GetPos() + Vector(0, 0, self.distance)
 end
