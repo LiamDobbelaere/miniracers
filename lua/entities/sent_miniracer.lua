@@ -24,10 +24,10 @@ function ENT:SpawnFunction(ply, tr, ClassName)
 end
 
 function ENT:Initialize()
+    if (CLIENT) then return end
+
     self.engineSound = CreateSound(self, "ambient/energy/electric_loop.wav")
     self.engineSound:Play()
-
-    if (CLIENT) then return end
 
     self:SetModel(self:GetMRModel())
     self:PhysicsInit(SOLID_VPHYSICS)
@@ -56,6 +56,20 @@ function ENT:Initialize()
 
     self.keyCamPressed = false
     self.keyResetPressed = false
+
+    self.softImpactSounds = { 
+        "miniracers/mrimpact_soft.wav",
+        "miniracers/mrimpact_soft2.wav",
+        "miniracers/mrimpact_soft3.wav",
+        "miniracers/mrimpact_soft4.wav"
+    }
+    self.hardImpactSounds = {
+        "miniracers/mrimpact_hard.wav",
+        "miniracers/mrimpact_hard2.wav",
+        "miniracers/mrimpact_hard3.wav",
+        "miniracers/mrimpact_hard4.wav",
+        "miniracers/mrimpact_hard5.wav"
+    }
 end 
 
 function ENT:GetMRModel()
@@ -74,9 +88,9 @@ function ENT:GetMRStats()
 end
 
 function ENT:OnRemove()
-    self.engineSound:Stop()
-
     if (CLIENT) then return end
+
+    self.engineSound:Stop()
 
     if IsValid(self.cam) then
         self.cam:Remove()
@@ -84,6 +98,14 @@ function ENT:OnRemove()
 
     if IsValid(self:GetCreator()) then
         self:GetCreator():SetViewEntity(NULL)
+    end
+end
+
+function ENT:PhysicsCollide(colData, collider)
+    if colData.Speed > 200 then
+        self:EmitSound(self.hardImpactSounds[math.random(1,#self.hardImpactSounds)], math.random(50, 75), math.random(90, 120))
+    elseif colData.Speed > 25 then
+        self:EmitSound(self.softImpactSounds[math.random(1,#self.softImpactSounds)], math.random(50, 75), math.random(90, 120))
     end
 end
 
