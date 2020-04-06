@@ -23,6 +23,6 @@ function ENT:GetMRStats()
         drift = 1,
         pitchMin = 50,
         pitchBase = 50,
-        pitchVelocityMultiplier = 2
+        pitchVelocityMultiplier = 0.2
     }
 end
