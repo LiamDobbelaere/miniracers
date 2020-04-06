@@ -38,7 +38,7 @@ function ENT:Initialize()
     self:DrawShadow(false)
 
     self.distance = 100
-    self.mode = 0
+    self.mode = 3 -- Start in player pov
 
     self.forceFirstPerson = false
 end
@@ -72,7 +72,7 @@ end
 function ENT:NextMode()
     self.mode = self.mode + 1
 
-    if self.mode > 2 then
+    if self.mode > 3 then
         self.mode = 0
     end
     
@@ -82,9 +82,10 @@ function ENT:NextMode()
 end
 
 function ENT:InitializeMode()
+    self:SetParent(nil)
+
     if self.mode == 0 then
         -- Top-down
-        self:SetParent(nil)
         self:SetPos(self:GetTopDownCamPos())
         self:SetAngles(Angle(90, 0, 0))
         self.player:SetViewEntity(self)
@@ -95,6 +96,12 @@ function ENT:InitializeMode()
         self:SetParent(self.target)
         self.player:SetViewEntity(self)
     elseif self.mode == 2 then
+        -- Third-person
+        self:SetPos(self.target:LocalToWorld(Vector(-25, 0, 8)))
+        self:SetAngles(self.target:GetAngles())
+        self:SetParent(self.target)
+        self.player:SetViewEntity(self)
+    elseif self.mode == 3 then
         -- No camera
         self.player:SetViewEntity(nil)
     end

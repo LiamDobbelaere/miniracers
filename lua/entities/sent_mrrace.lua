@@ -92,6 +92,12 @@ function ENT:SetupDataTables()
 	end
 end
 
+function ENT:ChatPrintToAll(text)
+    for k, ply in pairs(player.GetAll()) do
+        ply:ChatPrint(text)
+    end    
+end
+
 function ENT:Think()
     if (CLIENT) then return end
 
@@ -102,19 +108,11 @@ function ENT:Think()
 
             if self.raceCountDown == 0 then
                 self:EmitSound("buttons/button10.wav", 75, 100)
-                for k, ply in pairs(player.GetAll()) do
-                    self.laps = {}
-                    self.passedCheckpoint = {}            
-                    ply:ChatPrint(
-                        self:GetRaceName().."GO !!!"
-                    )
-                end                
+                self.laps = {}
+                self.passedCheckpoint = {}            
+                self:ChatPrintToAll(self:GetRaceName().."GO !!!")
             else
-                for k, ply in pairs(player.GetAll()) do
-                    ply:ChatPrint(
-                        self:GetRaceName()..self.raceCountDown..".."
-                    )
-                end                
+                self:ChatPrintToAll(self:GetRaceName()..self.raceCountDown.."..")
                 self:EmitSound("buttons/button18.wav", 75, 150 - self.raceCountDown * 10)
             end
 
@@ -140,15 +138,11 @@ function ENT:Think()
 
                 if self.laps[v:GetCreator()] == self:GetMaxLaps() then
                     self:EmitSound("ambient/alarms/klaxon1.wav")
-                    v:GetCreator():ChatPrint(
-                        self:GetRaceName()..v:GetCreator():Nick().." completed the race!"
-                    )    
+                    self:ChatPrintToAll(self:GetRaceName()..v:GetCreator():Nick().." completed the race!")
                 elseif self.laps[v:GetCreator()] < self:GetMaxLaps() then
                     self.passedCheckpoint[v:GetCreator()] = false
                     self:EmitSound("buttons/button3.wav")
-                    v:GetCreator():ChatPrint(
-                        self:GetRaceName()..v:GetCreator():Nick().." completed lap "..self.laps[v:GetCreator()]
-                    )    
+                    self:ChatPrintToAll(self:GetRaceName()..v:GetCreator():Nick().." completed lap "..self.laps[v:GetCreator()])
                 end
             end
         end
