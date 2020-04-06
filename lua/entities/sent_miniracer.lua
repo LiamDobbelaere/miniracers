@@ -34,7 +34,7 @@ function ENT:Initialize()
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
     self:SetUseType(SIMPLE_USE)
-    
+
     self.stats = self:GetMRStats()
     
     local phys = self:GetPhysicsObject()
@@ -53,6 +53,9 @@ function ENT:Initialize()
     self.cam:SetPos(self:GetPos())
     self.cam:Spawn()
     self.cam:Activate()
+
+    self.keyCamPressed = false
+    self.keyResetPressed = false
 end 
 
 function ENT:GetMRModel()
@@ -79,18 +82,18 @@ function ENT:OnRemove()
         self.cam:Remove()
     end
 
-    self:GetCreator():SetViewEntity(NULL)
-end
-
-function ENT:Use(activator)
-    if activator:IsPlayer() && activator == self:GetCreator() then
-        self.cam:NextMode()
+    if IsValid(self:GetCreator()) then
+        self:GetCreator():SetViewEntity(NULL)
     end
 end
 
 function ENT:Think()
     if (CLIENT) then return end
     
+    if not IsValid(self:GetCreator()) then
+        return
+    end
+
     local forwardNoUp = Vector(self:GetForward().x, 0, self:GetForward().z) 
 
     if not self.thinkOnce then
@@ -100,20 +103,39 @@ function ENT:Think()
     end
 
     local owner = self:GetCreator()
+
+
+
     local inputForward = owner:KeyDown(IN_FORWARD)
     local inputReverse = owner:KeyDown(IN_BACK)
     local inputLeft = owner:KeyDown(IN_MOVELEFT)
     local inputRight = owner:KeyDown(IN_MOVERIGHT)
-    local inputCam = owner:KeyPressed(IN_USE)
-    local inputReset = owner:KeyPressed(IN_RELOAD)
+    local inputCam = owner:KeyDown(IN_USE)
+    local inputReset = owner:KeyDown(IN_RELOAD)
 
-    if inputCam then
-        self.cam:NextMode()
+    -- Camera switching
+    if inputCam && not self.keyCamPressed then
+        if not self:IsPlayerHolding() then
+            self.cam:NextMode()
+        end
+
+        self.keyCamPressed = true
     end
-    
-    if inputReset then
+
+    if not inputCam && self.keyCamPressed then
+        self.keyCamPressed = false
+    end
+
+    -- Car resetting
+    if inputReset && not self.keyResetPressed then
         local currentAngles = self:GetAngles()
         self:SetAngles(Angle(0, currentAngles.y, 0))
+
+        self.keyResetPressed = true
+    end
+
+    if not inputReset && self.keyResetPressed then
+        self.keyResetPressed = false
     end
 
     local phy = self:GetPhysicsObject()
@@ -153,5 +175,6 @@ function ENT:Think()
     end
 
     self:NextThink( CurTime())
+
 	return true
 end

@@ -62,8 +62,6 @@ function ENT:Think()
             self:InitializeMode()
         end
 
-        print(canSeeTarget)
-
         if self.mode == 0 then
             phys:SetVelocity((self:GetTopDownCamPos() - self:GetPos()) * 5)
         end
@@ -76,6 +74,8 @@ function ENT:NextMode()
     if self.mode > 2 then
         self.mode = 0
     end
+    
+    self.forceFirstPerson = false
     
     self:InitializeMode()
 end
