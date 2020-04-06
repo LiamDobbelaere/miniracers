@@ -104,7 +104,7 @@ end
 function ENT:PhysicsCollide(colData, collider)
     if colData.Speed > 200 then
         self:EmitSound(self.hardImpactSounds[math.random(1,#self.hardImpactSounds)], math.random(50, 75), math.random(90, 120))
-    elseif colData.Speed > 25 then
+    elseif colData.Speed > 40 then
         self:EmitSound(self.softImpactSounds[math.random(1,#self.softImpactSounds)], math.random(50, 75), math.random(90, 120))
     end
 end

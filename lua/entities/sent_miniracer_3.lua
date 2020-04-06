@@ -8,7 +8,7 @@ ENT.Category = "Miniracers"
 ENT.Type = "anim"
 ENT.Base = "sent_miniracer"
 
-ENT.Editable = true
+ENT.Editable = false
 ENT.Spawnable = true
 ENT.AdminOnly = false
 
