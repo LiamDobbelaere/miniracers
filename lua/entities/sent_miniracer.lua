@@ -98,13 +98,11 @@ function ENT:Think()
 
     if not self.thinkOnce then
         self.cam.player = self:GetCreator()
-        self.cam:NextMode()
+        self.cam:InitializeMode()
         self.thinkOnce = true
     end
 
     local owner = self:GetCreator()
-
-
 
     local inputForward = owner:KeyDown(IN_FORWARD)
     local inputReverse = owner:KeyDown(IN_BACK)
@@ -174,7 +172,7 @@ function ENT:Think()
         phy:AddAngleVelocity(-phy:GetAngleVelocity())
     end
 
-    self:NextThink( CurTime())
+    self:NextThink(CurTime())
 
 	return true
 end
