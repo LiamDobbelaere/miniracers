@@ -59,9 +59,9 @@ function ENT:Think()
     local racers = ents.FindInSphere(self:GetPos() + self:GetForward() * 35 , 30)
     for k, v in pairs(racers) do
         if IsValid(v) && string.match(v:GetClass(), "sent_miniracer") then
-            if not self.race.passedCheckpoint[v:GetCreator()] then
+            if not self.race.passedCheckpoint[v:GetOwnerName()] then
                 self:EmitSound("buttons/button17.wav")                
-                self.race.passedCheckpoint[v:GetCreator()] = true
+                self.race.passedCheckpoint[v:GetOwnerName()] = true
             end
         end
     end

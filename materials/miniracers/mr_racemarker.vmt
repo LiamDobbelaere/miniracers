@@ -4,7 +4,6 @@
 
 // BEGIN Textures
 	$basetexture "miniracers/mr_racemarker"
-	$translucent 1
 // END Textures
 
 

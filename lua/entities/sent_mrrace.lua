@@ -111,6 +111,15 @@ function ENT:Think()
                 self.laps = {}
                 self.passedCheckpoint = {}            
                 self:ChatPrintToAll(self:GetRaceName().."GO !!!")
+                local racers = ents.FindInSphere(self:GetPos() + self:GetForward() * 35 , 30)
+                for k, v in pairs(racers) do
+                    if IsValid(v) && string.match(v:GetClass(), "sent_miniracer") then
+                        if v:GetAI() then
+                            v:AIInit()
+                            v:SetAIWaitForRace(false)
+                        end
+                    end
+                end
             else
                 self:ChatPrintToAll(self:GetRaceName()..self.raceCountDown.."..")
                 self:EmitSound("buttons/button18.wav", 75, 150 - self.raceCountDown * 10)
@@ -123,26 +132,24 @@ function ENT:Think()
     local racers = ents.FindInSphere(self:GetPos() + self:GetForward() * 35 , 30)
     for k, v in pairs(racers) do
         if IsValid(v) && self.raceCountDown == 0 && string.match(v:GetClass(), "sent_miniracer") then
-            --print(v)
-            --print(v:GetCreator())
-            if self.passedCheckpoint[v:GetCreator()] then
+            if self.passedCheckpoint[v:GetOwnerName()] then
 
                 if self.checkpoint:GetPos():Distance(self:GetPos()) < 150 then
                     return
                 end
 
-                if not self.laps[v:GetCreator()] then
-                    self.laps[v:GetCreator()] = 0
+                if not self.laps[v:GetOwnerName()] then
+                    self.laps[v:GetOwnerName()] = 0
                 end
-                self.laps[v:GetCreator()] = self.laps[v:GetCreator()] + 1
+                self.laps[v:GetOwnerName()] = self.laps[v:GetOwnerName()] + 1
 
-                if self.laps[v:GetCreator()] == self:GetMaxLaps() then
+                if self.laps[v:GetOwnerName()] == self:GetMaxLaps() then
                     self:EmitSound("ambient/alarms/klaxon1.wav")
-                    self:ChatPrintToAll(self:GetRaceName()..v:GetCreator():Nick().." completed the race!")
-                elseif self.laps[v:GetCreator()] < self:GetMaxLaps() then
-                    self.passedCheckpoint[v:GetCreator()] = false
+                    self:ChatPrintToAll(self:GetRaceName()..v:GetOwnerName().." completed the race!")
+                elseif self.laps[v:GetOwnerName()] < self:GetMaxLaps() then
+                    self.passedCheckpoint[v:GetOwnerName()] = false
                     self:EmitSound("buttons/button3.wav")
-                    self:ChatPrintToAll(self:GetRaceName()..v:GetCreator():Nick().." completed lap "..self.laps[v:GetCreator()])
+                    self:ChatPrintToAll(self:GetRaceName()..v:GetOwnerName().." completed lap "..self.laps[v:GetOwnerName()])
                 end
             end
         end

@@ -12,7 +12,7 @@ ENT.Editable = true
 ENT.Spawnable = false
 ENT.AdminOnly = false
 
-properties.Add("mrreset", {
+properties.Add("mrcarai", {
     Type = "toggle",
 	MenuLabel = "AI driver", -- Name to display on the context menu
 	Order = 999, -- The order to display this property relative to other properties
@@ -45,6 +45,35 @@ properties.Add("mrreset", {
         else
             ent:SetOwnerName(ent:GetCreator():Name())
         end
+	end 
+})
+
+properties.Add("mrcaraiwait", {
+    Type = "toggle",
+	MenuLabel = "AI waits for race", -- Name to display on the context menu
+	Order = 999, -- The order to display this property relative to other properties
+	MenuIcon = "icon16/flag_yellow.png", -- The icon to display next to the property
+
+	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
+		if (!IsValid(ent)) then return false end
+        if (not string.match(ent:GetClass(), "sent_miniracer")) then return false end
+		if (!gamemode.Call("CanProperty", ply, "mrai", ent)) then return false end
+
+		return true
+    end,
+    Checked = function(self, ent, tr)
+        return ent:GetAIWaitForRace()
+    end,
+	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+		self:MsgStart()
+			net.WriteEntity(ent)
+		self:MsgEnd()
+	end,
+	Receive = function(self, length, player) -- The action to perform upon using the property (Serverside)
+		local ent = net.ReadEntity()
+		if (!self:Filter(ent, player)) then return end
+        
+        ent:SetAIWaitForRace(!ent:GetAIWaitForRace())        
 	end 
 })
 
@@ -158,17 +187,17 @@ end
 
 function ENT:SetRandomName()
     local names = {
-        "The Spy",
-        "Car goes BRRRR",
-        "Max Damage",
-        "Gotta go fast",
-        "I am speed",
-        "Sonic",
-        "Crispy",
-        "Strider",
-        "Chopper",
-        "Wheeli Vance",
-        "Vomitboy"
+        "[COM] The Spy",
+        "[COM] Car goes BRRRR",
+        "[COM] Max Damage",
+        "[COM] Gotta go fast",
+        "[COM] I am speed",
+        "[COM] Sonic",
+        "[COM] Crispy",
+        "[COM] Strider",
+        "[COM] Chopper",
+        "[COM] Wheeli Vance",
+        "[COM] Vomitboy"
     }
 
     self:SetOwnerName(names[math.random(1,#names)])
@@ -287,7 +316,12 @@ end
 function ENT:SetupDataTables()
     self:NetworkVar("String", 0, "OwnerName")
     self:NetworkVar("Bool", 0, "AI")
+    self:NetworkVar("Bool", 1, "AIWaitForRace")
     self:NetworkVar("Entity", 0, "MrCamera")
+
+    if SERVER then
+        self:SetAIWaitForRace(false)
+    end
 end
 
 function ENT:Draw3DText(pos, ang, scale, text, flipView)
@@ -322,7 +356,7 @@ function ENT:Draw()
         self:GetPos() + Vector(0, 0, 16), 
         Angle(0, GetViewEntity():GetAngles().y + 90, 90),
         0.2, 
-        self:GetOwnerName("OwnerName"), 
+        self:GetOwnerName(), 
         true
     )
 end
@@ -349,11 +383,9 @@ function ENT:AINextMarker()
         table.insert(self.markerMemory, self.targetMarker)
     end
 
-    if #self.markerMemory > 5 then
+    if #self.markerMemory > 4 then
         table.remove(self.markerMemory, 1)
     end
-
-    print(#self.markerMemory)
 
     for k, v in pairs(ents.FindByClass("sent_mraiwaypoint")) do
         if not self:IsMemorizedMarker(v) then
@@ -376,6 +408,17 @@ function ENT:AIThink()
     right = false
     cam = false
     reset = false
+
+    if self:GetAIWaitForRace() then
+        return {
+            inputForward = forward,
+            inputReverse = reverse,
+            inputLeft = left,
+            inputRight = right,
+            inputCam = cam,
+            inputReset = reset
+        }
+    end
 
     if not IsValid(self.targetMarker) then
         forward = true
