@@ -70,6 +70,11 @@ function ENT:Initialize()
         "miniracers/mrimpact_hard4.wav",
         "miniracers/mrimpact_hard5.wav"
     }
+
+    self:SetAI(true)
+    self.markers = ents.FindByClass("sent_mraiwaypoint")
+    self.markerMemory = {}
+    self:AINextMarker()
 end 
 
 function ENT:GetMRModel()
@@ -119,6 +124,26 @@ function ENT:Think()
     local forwardNoUp = Vector(self:GetForward().x, 0, self:GetForward().z) 
 
     if not self.thinkOnce then
+        if self:GetAI() then
+            local names = {
+                "The Spy",
+                "Car goes BRRRR",
+                "Max Damage",
+                "Gotta go fast",
+                "I am speed",
+                "Sonic",
+                "Crispy",
+                "Strider",
+                "Chopper",
+                "Wheeli Vance"
+            }
+
+            self:SetOwnerName(names[math.random(1,#names)])
+        else
+            self:SetOwnerName(self:GetCreator():Name())
+        end
+
+
         self.cam.player = self:GetCreator()
         self.cam:InitializeMode()
         self.thinkOnce = true
@@ -126,12 +151,25 @@ function ENT:Think()
 
     local owner = self:GetCreator()
 
-    local inputForward = owner:KeyDown(IN_FORWARD)
-    local inputReverse = owner:KeyDown(IN_BACK)
-    local inputLeft = owner:KeyDown(IN_MOVELEFT)
-    local inputRight = owner:KeyDown(IN_MOVERIGHT)
-    local inputCam = owner:KeyDown(IN_USE)
-    local inputReset = owner:KeyDown(IN_RELOAD)
+    local inputForward, inputReverse, inputLeft, inputRight, inputCam, inputReset
+
+    if self:GetAI() then
+        local inputs = self:AIThink()
+
+        inputForward = inputs["inputForward"]
+        inputReverse = inputs["inputReverse"]
+        inputLeft = inputs["inputLeft"]
+        inputRight = inputs["inputRight"]
+        inputCam = inputs["inputCam"]
+        inputReset = inputs["inputReset"]
+    else
+        inputForward = owner:KeyDown(IN_FORWARD)
+        inputReverse = owner:KeyDown(IN_BACK)
+        inputLeft = owner:KeyDown(IN_MOVELEFT)
+        inputRight = owner:KeyDown(IN_MOVERIGHT)
+        inputCam = owner:KeyDown(IN_USE)
+        inputReset = owner:KeyDown(IN_RELOAD)
+    end
 
     -- Camera switching
     if inputCam && not self.keyCamPressed then
@@ -197,4 +235,98 @@ function ENT:Think()
     self:NextThink(CurTime())
 
 	return true
+end
+
+function ENT:SetupDataTables()
+    self:NetworkVar("String", 0, "OwnerName")
+    self:NetworkVar("Bool", 0, "AI")
+end
+
+function ENT:Draw3DText(pos, ang, scale, text, flipView)
+	if (flipView) then
+		ang:RotateAroundAxis(Vector( 0, 0, 1 ), 180)
+	end
+
+    cam.Start3D2D(pos, ang, scale)
+        local color = Color(0, 0, 255, 255)
+        if self:GetAI() then
+            color = Color(255, 0, 0, 255)
+        end
+
+		draw.DrawText(text, "DermaLarge", 0, 0, color, TEXT_ALIGN_CENTER)
+	cam.End3D2D()
+end
+
+function ENT:Draw()
+    self:DrawModel()
+    local playerAngles = LocalPlayer():GetAngles()
+
+    if LocalPlayer():GetActiveWeapon():GetClass() == 'gmod_camera' then
+        return
+    end
+
+    self:Draw3DText(
+        self:GetPos() + Vector(0, 0, 16), 
+        Angle(0, playerAngles.y + 90, 90),--Angle(0, self:GetAngles().y + 90, 90), 
+        0.2, 
+        self:GetOwnerName("OwnerName"), 
+        true
+    )
+end
+
+function ENT:AINextMarker()
+    local closestDistance = -1
+    local closest = nil
+
+    for k, v in pairs(ents.FindByClass("sent_mraiwaypoint")) do
+        if v != self.targetMarker then
+            local sqrDist = v:GetPos():DistToSqr(self:GetPos())
+            if sqrDist < closestDistance or closestDistance == -1 then
+                closest = v
+                closestDistance = sqrDist
+            end
+        end
+    end
+
+    self.targetMarker = closest
+end
+
+function ENT:AIThink()
+    local forward, reverse, left, right, cam, reset
+    forward = false
+    reverse = false
+    left = false
+    right = false
+    cam = false
+    reset = false
+
+    if not IsValid(self.targetMarker) then
+        forward = true
+        left = true
+    else
+        local vectorToMarker = (self.targetMarker:GetPos() - self:GetPos()):GetNormalized();
+        local angleToMarker = self:GetForward():AngleEx(vectorToMarker)
+        local distanceToMarker = self:GetPos():DistToSqr(self.targetMarker:GetPos())
+    
+        if angleToMarker.z > 0 then
+            right = true
+        else
+            left = true
+        end
+    
+        if distanceToMarker > 1024 then
+            forward = true
+        else
+            self:AINextMarker()
+        end    
+    end
+
+    return {
+        inputForward = forward,
+        inputReverse = reverse,
+        inputLeft = left,
+        inputRight = right,
+        inputCam = cam,
+        inputReset = reset
+    }
 end

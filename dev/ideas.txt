@@ -1,7 +1,3 @@
-- Fix camera when going inside a building
-- Fix player freezing
-- Add key rebinding
-- Fix car crashing when player leaves the server
-- Add an entity that can record a race (countdown, track laps in chat w/ name of race)
-- Car colors through the context menu (NOT edit properties, add new entries!), actually nvm, 
-looks like you can just add skins to the models
+- Recovery system
+- Checkpoint transparency fix
+- Derby cars (?)
