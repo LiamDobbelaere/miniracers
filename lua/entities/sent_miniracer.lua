@@ -89,6 +89,7 @@ function ENT:Initialize()
     self.cam:SetPos(self:GetPos())
     self.cam:Spawn()
     self.cam:Activate()
+    self:SetMrCamera(self.cam)
 
     self.keyCamPressed = false
     self.keyResetPressed = false
@@ -286,6 +287,7 @@ end
 function ENT:SetupDataTables()
     self:NetworkVar("String", 0, "OwnerName")
     self:NetworkVar("Bool", 0, "AI")
+    self:NetworkVar("Entity", 0, "MrCamera")
 end
 
 function ENT:Draw3DText(pos, ang, scale, text, flipView)
@@ -305,6 +307,11 @@ end
 
 function ENT:Draw()
     self:DrawModel()
+
+    if GetViewEntity() == self:GetMrCamera() then
+        return
+    end
+
     local playerAngles = LocalPlayer():GetAngles()
 
     if LocalPlayer():GetActiveWeapon():GetClass() == 'gmod_camera' then
@@ -313,7 +320,7 @@ function ENT:Draw()
 
     self:Draw3DText(
         self:GetPos() + Vector(0, 0, 16), 
-        Angle(0, playerAngles.y + 90, 90),--Angle(0, self:GetAngles().y + 90, 90), 
+        Angle(0, GetViewEntity():GetAngles().y + 90, 90),
         0.2, 
         self:GetOwnerName("OwnerName"), 
         true

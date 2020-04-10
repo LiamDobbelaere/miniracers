@@ -16,7 +16,7 @@ function ENT:SpawnFunction(ply, tr, ClassName)
     if not tr.Hit then return end
 
     local ent = ents.Create(ClassName)
-    ent:SetPos(tr.HitPos + tr.HitNormal * 25)
+    ent:SetPos(tr.HitPos + tr.HitNormal * 50)
     ent:Spawn()
     ent:Activate()
 
