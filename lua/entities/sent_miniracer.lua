@@ -12,6 +12,42 @@ ENT.Editable = true
 ENT.Spawnable = false
 ENT.AdminOnly = false
 
+properties.Add("mrreset", {
+    Type = "toggle",
+	MenuLabel = "AI driver", -- Name to display on the context menu
+	Order = 999, -- The order to display this property relative to other properties
+	MenuIcon = "icon16/computer.png", -- The icon to display next to the property
+
+	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
+		if (!IsValid(ent)) then return false end
+        if (not string.match(ent:GetClass(), "sent_miniracer")) then return false end
+		if (!gamemode.Call("CanProperty", ply, "mrai", ent)) then return false end
+
+		return true
+    end,
+    Checked = function(self, ent, tr)
+        return ent:GetAI()
+    end,
+	Action = function(self, ent) -- The action to perform upon using the property (Clientside)
+		self:MsgStart()
+			net.WriteEntity(ent)
+		self:MsgEnd()
+	end,
+	Receive = function(self, length, player) -- The action to perform upon using the property (Serverside)
+		local ent = net.ReadEntity()
+		if (!self:Filter(ent, player)) then return end
+        
+        ent:SetAI(!ent:GetAI())
+        
+        if ent:GetAI() then
+            ent:AIInit()
+            ent:SetRandomName()
+        else
+            ent:SetOwnerName(ent:GetCreator():Name())
+        end
+	end 
+})
+
 function ENT:SpawnFunction(ply, tr, ClassName)
     if not tr.Hit then return end
 
@@ -71,11 +107,16 @@ function ENT:Initialize()
         "miniracers/mrimpact_hard5.wav"
     }
 
-    self:SetAI(true)
+    self:SetAI(false)
+    self:AIInit()
+end 
+
+function ENT:AIInit()
     self.markers = ents.FindByClass("sent_mraiwaypoint")
     self.markerMemory = {}
+    self.startingMarker = nil
     self:AINextMarker()
-end 
+end
 
 function ENT:GetMRModel()
     return "models/Gibs/HGIBS.mdl"
@@ -114,6 +155,24 @@ function ENT:PhysicsCollide(colData, collider)
     end
 end
 
+function ENT:SetRandomName()
+    local names = {
+        "The Spy",
+        "Car goes BRRRR",
+        "Max Damage",
+        "Gotta go fast",
+        "I am speed",
+        "Sonic",
+        "Crispy",
+        "Strider",
+        "Chopper",
+        "Wheeli Vance",
+        "Vomitboy"
+    }
+
+    self:SetOwnerName(names[math.random(1,#names)])
+end
+
 function ENT:Think()
     if (CLIENT) then return end
     
@@ -125,20 +184,7 @@ function ENT:Think()
 
     if not self.thinkOnce then
         if self:GetAI() then
-            local names = {
-                "The Spy",
-                "Car goes BRRRR",
-                "Max Damage",
-                "Gotta go fast",
-                "I am speed",
-                "Sonic",
-                "Crispy",
-                "Strider",
-                "Chopper",
-                "Wheeli Vance"
-            }
-
-            self:SetOwnerName(names[math.random(1,#names)])
+            self:SetRandomName()
         else
             self:SetOwnerName(self:GetCreator():Name())
         end
@@ -274,12 +320,36 @@ function ENT:Draw()
     )
 end
 
+function ENT:IsMemorizedMarker(val)
+    for _, v in pairs(self.markerMemory) do
+        if v == val then
+            return true
+        end
+    end
+
+    return false
+end
+
 function ENT:AINextMarker()
     local closestDistance = -1
     local closest = nil
 
+    if IsValid(self.targetMarker) then
+        if #self.markerMemory == 0 then
+            self.startingMarker = self.targetMarker
+        end
+    
+        table.insert(self.markerMemory, self.targetMarker)
+    end
+
+    if #self.markerMemory > 5 then
+        table.remove(self.markerMemory, 1)
+    end
+
+    print(#self.markerMemory)
+
     for k, v in pairs(ents.FindByClass("sent_mraiwaypoint")) do
-        if v != self.targetMarker then
+        if not self:IsMemorizedMarker(v) then
             local sqrDist = v:GetPos():DistToSqr(self:GetPos())
             if sqrDist < closestDistance or closestDistance == -1 then
                 closest = v
@@ -303,6 +373,8 @@ function ENT:AIThink()
     if not IsValid(self.targetMarker) then
         forward = true
         left = true
+
+        self:AINextMarker()
     else
         local vectorToMarker = (self.targetMarker:GetPos() - self:GetPos()):GetNormalized();
         local angleToMarker = self:GetForward():AngleEx(vectorToMarker)
@@ -314,7 +386,7 @@ function ENT:AIThink()
             left = true
         end
     
-        if distanceToMarker > 1024 then
+        if distanceToMarker > 4096 then
             forward = true
         else
             self:AINextMarker()
