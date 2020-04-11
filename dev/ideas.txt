@@ -1,3 +1,11 @@
 - Recovery system
 - Checkpoint transparency fix
 - Derby cars (?)
+
+Fixes:
+- X Spawn markers frozen
+- X Use marker on ground instead of marker in air for AI
+- Add follow player flag
+- X Spawn cars assigns random skin
+- X Make indexed waypoints
+- (TEMP fixed) Fix error sounds happening on client when someone else spawns ai markers

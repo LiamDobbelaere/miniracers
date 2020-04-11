@@ -21,7 +21,7 @@ properties.Add("mrcarai", {
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
         if (not string.match(ent:GetClass(), "sent_miniracer")) then return false end
-		if (!gamemode.Call("CanProperty", ply, "mrai", ent)) then return false end
+		if (!gamemode.Call("CanProperty", ply, "mraicar", ent)) then return false end
 
 		return true
     end,
@@ -57,7 +57,7 @@ properties.Add("mrcaraiwait", {
 	Filter = function(self, ent, ply) -- A function that determines whether an entity is valid for this property
 		if (!IsValid(ent)) then return false end
         if (not string.match(ent:GetClass(), "sent_miniracer")) then return false end
-		if (!gamemode.Call("CanProperty", ply, "mrai", ent)) then return false end
+		if (!gamemode.Call("CanProperty", ply, "mraiwait", ent)) then return false end
 
 		return true
     end,
@@ -99,6 +99,7 @@ function ENT:Initialize()
     self:SetMoveType(MOVETYPE_VPHYSICS)
     self:SetSolid(SOLID_VPHYSICS)
     self:SetUseType(SIMPLE_USE)
+    self:SetSkin(math.random(0,self:SkinCount() - 1))
 
     self.stats = self:GetMRStats()
     
@@ -197,7 +198,9 @@ function ENT:SetRandomName()
         "[COM] Strider",
         "[COM] Chopper",
         "[COM] Wheeli Vance",
-        "[COM] Vomitboy"
+        "[COM] Vomitboy",
+        "[COM] Lightning McQueer",
+        "[COM] Vin Benzene"
     }
 
     self:SetOwnerName(names[math.random(1,#names)])
@@ -335,6 +338,7 @@ function ENT:Draw3DText(pos, ang, scale, text, flipView)
             color = Color(255, 0, 0, 255)
         end
 
+        draw.DrawText(text, "DermaLarge", 2, 2, Color(0, 0, 0, 255), TEXT_ALIGN_CENTER)
 		draw.DrawText(text, "DermaLarge", 0, 0, color, TEXT_ALIGN_CENTER)
 	cam.End3D2D()
 end
@@ -347,8 +351,7 @@ function ENT:Draw()
     end
 
     local playerAngles = LocalPlayer():GetAngles()
-
-    if LocalPlayer():GetActiveWeapon():GetClass() == 'gmod_camera' then
+    if IsValid(LocalPlayer():GetActiveWeapon()) and LocalPlayer():GetActiveWeapon():GetClass() == 'gmod_camera' then
         return
     end
 
@@ -388,8 +391,15 @@ function ENT:AINextMarker()
     end
 
     for k, v in pairs(ents.FindByClass("sent_mraiwaypoint")) do
+        if IsValid(self.targetMarker) 
+            and v:GetCreator() == self.targetMarker:GetCreator()
+            and v:GetMarkerIndex() == self.targetMarker:GetMarkerIndex() + 1 then
+            closest = v
+            break
+        end
+
         if not self:IsMemorizedMarker(v) then
-            local sqrDist = v:GetPos():DistToSqr(self:GetPos())
+            local sqrDist = v:GetTargetPos():DistToSqr(self:GetPos())
             if sqrDist < closestDistance or closestDistance == -1 then
                 closest = v
                 closestDistance = sqrDist
@@ -426,9 +436,9 @@ function ENT:AIThink()
 
         self:AINextMarker()
     else
-        local vectorToMarker = (self.targetMarker:GetPos() - self:GetPos()):GetNormalized();
+        local vectorToMarker = (self.targetMarker:GetTargetPos() - self:GetPos()):GetNormalized();
         local angleToMarker = self:GetForward():AngleEx(vectorToMarker)
-        local distanceToMarker = self:GetPos():DistToSqr(self.targetMarker:GetPos())
+        local distanceToMarker = self:GetPos():DistToSqr(self.targetMarker:GetTargetPos())
     
         if angleToMarker.z > 0 then
             right = true
